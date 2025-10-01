@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description = "Extract database records and generate seed files organized by database with automatic dependency resolution. Like a grainery stores grain, this gem stores and organizes your database seeds."
   spec.license     = "MIT"
 
-  spec.required_ruby_version = ">= 2.7.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
@@ -21,8 +21,9 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "rails", "~> 6.0"
+  spec.add_dependency "rails", ">= 6.1", "< 9"
+  spec.add_dependency "faker", "~> 3.0"
 
-  spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "sqlite3", "~> 1.4"
 end

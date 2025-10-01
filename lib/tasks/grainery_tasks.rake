@@ -22,7 +22,7 @@ namespace :grainery do
     puts "Harvesting data from all tables..."
 
     grainery = Grainery::Grainer.new
-    grainery.harvest_all(limit: 100) # Default limit of 100 records per table
+    grainery.harvest_all(limit: 100, dump_schema: true, anonymize: true) # Default limit of 100 records per table
 
     puts "\n✓ Data harvested to db/grainery/"
   end
@@ -33,15 +33,72 @@ namespace :grainery do
     puts "   This may take a while and create large files\n\n"
 
     grainery = Grainery::Grainer.new
-    grainery.harvest_all(limit: nil)
+    grainery.harvest_all(limit: nil, dump_schema: true, anonymize: true)
 
     puts "\n✓ All data harvested to db/grainery/"
   end
 
+  desc "Harvest data without schema dump"
+  task generate_data_only: :environment do
+    puts "Harvesting data from all tables (no schema dump)..."
+
+    grainery = Grainery::Grainer.new
+    grainery.harvest_all(limit: 100, dump_schema: false, anonymize: true)
+
+    puts "\n✓ Data harvested to db/grainery/"
+  end
+
+  desc "Harvest data without anonymization (raw production data)"
+  task generate_raw: :environment do
+    puts "⚠  WARNING: Harvesting RAW production data without anonymization!"
+    puts "   This will include sensitive information (emails, names, etc.)"
+    puts "   DO NOT commit these files to version control\n\n"
+
+    grainery = Grainery::Grainer.new
+    grainery.harvest_all(limit: 100, dump_schema: true, anonymize: false)
+
+    puts "\n✓ Raw data harvested to db/grainery/"
+    puts "⚠  Remember: This data contains sensitive information!"
+  end
+
   desc "Load harvested seeds into database (in dependency order)"
   task load: :environment do
+    if Rails.env.production?
+      puts "❌ ERROR: Cannot load seeds in production environment!"
+      puts "   This is a destructive operation that could overwrite production data."
+      puts "\n   If you absolutely must load seeds in production:"
+      puts "   Set GRAINERY_ALLOW_PRODUCTION=true environment variable"
+      puts "\n   Example: GRAINERY_ALLOW_PRODUCTION=true rake grainery:load"
+      exit 1 unless ENV['GRAINERY_ALLOW_PRODUCTION'] == 'true'
+
+      puts "⚠️  WARNING: Loading seeds in PRODUCTION environment!"
+      puts "   Proceeding because GRAINERY_ALLOW_PRODUCTION=true"
+      puts "   Press Ctrl+C within 5 seconds to cancel..."
+      sleep 5
+    end
+
     grainery = Grainery::Grainer.new
-    grainery.load_seeds
+    grainery.load_seeds(load_schema: false)
+  end
+
+  desc "Load schemas and seeds into database"
+  task load_with_schema: :environment do
+    if Rails.env.production?
+      puts "❌ ERROR: Cannot load schemas in production environment!"
+      puts "   This is a destructive operation that could overwrite production data."
+      puts "\n   If you absolutely must load schemas in production:"
+      puts "   Set GRAINERY_ALLOW_PRODUCTION=true environment variable"
+      puts "\n   Example: GRAINERY_ALLOW_PRODUCTION=true rake grainery:load_with_schema"
+      exit 1 unless ENV['GRAINERY_ALLOW_PRODUCTION'] == 'true'
+
+      puts "⚠️  WARNING: Loading schemas and seeds in PRODUCTION environment!"
+      puts "   Proceeding because GRAINERY_ALLOW_PRODUCTION=true"
+      puts "   Press Ctrl+C within 5 seconds to cancel..."
+      sleep 5
+    end
+
+    grainery = Grainery::Grainer.new
+    grainery.load_seeds(load_schema: true)
   end
 
   desc "Clean grainery directory"

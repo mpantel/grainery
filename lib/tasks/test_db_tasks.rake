@@ -2,6 +2,12 @@ namespace :test do
   namespace :db do
     desc "Setup clean test database for grainery-based testing"
     task setup_for_grainery: :environment do
+      if Rails.env.production?
+        puts "❌ ERROR: Cannot run test database setup in production environment!"
+        puts "   This task is only for test/development environments."
+        exit 1
+      end
+
       puts "Setting up clean test database for grainery-based testing..."
 
       # Switch to test environment
@@ -76,6 +82,12 @@ namespace :test do
 
     desc "Clean test database (truncate all tables)"
     task clean: :environment do
+      if Rails.env.production?
+        puts "❌ ERROR: Cannot truncate tables in production environment!"
+        puts "   This is a destructive operation."
+        exit 1
+      end
+
       Rails.env = 'test'
       ActiveRecord::Base.establish_connection(:test)
 
